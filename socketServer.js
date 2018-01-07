@@ -43,6 +43,27 @@ io.sockets.on('connection', (socket) => {
     socket.emit('sendNewMessageSuccess', appObj)
   })
 
+  // 管理者发红包
+  socket.on('sendMoney', ()=> {
+    appObj.chatHis.push({
+      userName: socket.userName,
+      type: 'sendMoney'
+    })
+    socket.broadcast.emit('sendMoneySuccess', appObj)
+    socket.emit('sendMoneySuccess', appObj)
+  })
+
+  // 领取红包
+  socket.on('getMoney', (moneyObj)=> {
+    appObj.chatHis.push({
+      userName: socket.userName,
+      type: 'getMoney',
+      money: moneyObj.money
+    })
+    socket.broadcast.emit('getMoneySuccess', appObj)
+    socket.emit('getMoneySuccess', appObj)
+  })
+
   // 用户离开
   socket.on('disconnect', () => {
     if (socket.userName) {

@@ -23,7 +23,7 @@
           <i class="onlineIcon"></i>{{ userList ? userList.length : 0 }}人在线
         </h2>
         <ul class="chatCont" ref="chatCont">
-          <li :class="{ 'others': item.type=='sendNewMessage' && item.userName!=userName, 'myText': item.type=='sendNewMessage' && item.userName==userName, 'system': (item.type=='newUser' || item.type=='deleUser') }" v-for="(item, index) in chatHis" :key="index">
+          <li :class="{ 'others': item.type=='sendNewMessage' && item.userName!=userName, 'money': item.type=='sendMoney','myText': item.type=='sendNewMessage' && item.userName==userName, 'system': (item.type=='newUser' || item.type=='deleUser' || item.type=='getMoney') }" v-for="(item, index) in chatHis" :key="index">
             <div v-if="item.type=='sendNewMessage' && item.userName!=userName">
               <span class="head">{{ item.userName.slice(-1) }}</span>
               <div class="text">
@@ -42,25 +42,55 @@
             <div v-if="item.type=='deleUser'">
               <span>{{ item.userName }} 离开了聊天室</span>
             </div>
+            <div v-if="item.type=='getMoney'">
+              <span>{{ item.userName }} 获得了 {{ item.money }} 元</span>
+            </div>
+            <div v-if="item.type=='sendMoney'">
+              <div class="text">
+                <h2 @click="randMoney">
+                  <i class="moneyIcon"></i>
+                  抢红包!
+                </h2>
+              </div>
+            </div>
           </li>
         </ul>
       </div>
       <div class="btns">
         <div class="inp">
-          <input type="text" placeholder="说点什么" v-model="sayCont">
+          <input type="text" placeholder="说点什么" @focus="showFace=false" v-model="sayCont">
           <span class="disable" @click="sendMessage">发送</span>
         </div>
         <div class="other">
           <b class="colorIcon"></b>
           <b class="imgIcon imgButton">
             <label for="img">
-              <input type="file" id="img" name="img" v-show="0">
+              <input @change="uploadImg" type="file" id="img" name="img" v-show="0">
             </label>
           </b>
           <b class="faceIcon" @click="showFace=!showFace"></b>
-          <b class="moneyIcon"></b>
+          <b v-if="userName=='sinbada' || userName=='杨理想' || userName=='理想' || userName=='system'" class="moneyIcon" @click="sendMoney"></b>
         </div>
       </div>
+      <transition name="boceIn">
+        <div class="moneyWrap" v-if="showMoney">
+          <div class="moneyBox">
+            <div class="top">
+              <h6 class="close">
+                <i @click="showMoney=false">&#10006</i>
+              </h6>
+              <div class="head">
+                <span>{{ userName.slice(-1) }}</span>
+                <h4>{{ userName }}</h4>
+              </div>
+              <p>{{ moneyObj.warning }}</p>
+            </div>
+            <div class="bottom">
+              <h5>@copyRight by lx</h5>
+            </div>
+          </div>
+        </div>
+      </transition>
       <transition name="slideUp">
         <div class="faceBox" v-show="showFace">
           <ul>
@@ -92,6 +122,12 @@ export default {
       warning: '',
       sayCont: '',
       showFace: false,
+      showMoney: false,
+      moneyObj: {
+        money: 0,
+        firstGet: true,
+        warning: ''
+      },
       userList: [],
       chatHis: []
     }
@@ -119,33 +155,37 @@ export default {
   sockets: {
     connectSuccess (obj) {
       console.log(obj)
-      this.userList = obj.userList
-      this.chatHis = obj.chatHis
+      this.common(obj)
     },
     addUserSuccess (obj) {
-      console.log(obj)
-      this.userList = obj.userList
-      this.chatHis = obj.chatHis
+      this.common(obj)
     },
     deleUserSuccess (obj) {
-      this.userList = obj.userList
-      this.chatHis = obj.chatHis
+      this.common(obj)
     },
     sendNewMessageSuccess (obj) {
+      this.common(obj)
+    },
+    sendMoneySuccess (obj) {
+      this.common(obj)
+    },
+    getMoneySuccess (obj) {
       console.log(obj)
+      this.common(obj)
+    }
+  },
+  methods: {
+    common (obj) {
       this.userList = obj.userList
       this.chatHis = obj.chatHis
       this.$nextTick(() => {
         this.$refs.chatCont.scrollTop = this.$refs.chatCont.scrollHeight
       })
     },
-    login (value) {
-      console.log(value)
-    }
-  },
-  methods: {
-    abc () {
-      this.$socket.emit('login', 1111)
+    // 随机函数
+    randNum (m, n) {
+      let num = Math.floor(Math.random() * (n - m + 1) + m)
+      return num
     },
     // 发送消息
     sendMessage () {
@@ -153,6 +193,26 @@ export default {
         this.$socket.emit('sendNewMessage', this.sayCont)
         this.sayCont = ''
       }
+    },
+    // 发红包
+    sendMoney () {
+      this.$socket.emit('sendMoney')
+    },
+    // 随机钱数大小
+    randMoney () {
+      if (this.moneyObj.firstGet) {
+        let money = 12.5
+        let randNum = Math.random() * 11
+        let addOrDel = this.randNum(0, 1) ? 1 : (-1)
+        console.log(money, randNum, addOrDel)
+        this.moneyObj.money = (money + randNum * addOrDel).toFixed(2)
+        this.moneyObj.warning = `恭喜你获得 ${this.moneyObj.money} 元红包`
+        this.$socket.emit('getMoney', this.moneyObj)
+        this.moneyObj.firstGet = false
+      } else {
+        this.moneyObj.warning = `你已经抢过这个红包获得了 ${this.moneyObj.money} 元, 给被人留点吧!`
+      }
+      this.showMoney = true
     },
     randColor () {
       let r = Math.floor(Math.random() * 255 + 1)
@@ -171,6 +231,20 @@ export default {
         this.$socket.emit('addUser', this.userName.trim())
         this.nameOk = false
         clearInterval(this.time)
+      }
+    },
+    // 发送图片
+    uploadImg (e) {
+      let file = e.target.files[0]
+      let imageType = /image.*/
+      if (file.type.match(imageType)) {
+        let reader = new FileReader()
+        reader.onload = () => {
+          let img = new Image()
+          img.src = reader.result
+          let url = reader.result
+          console.log(url)
+        }
       }
     },
     // 渲染表情图片
@@ -361,6 +435,22 @@ export default {
             font-size 1.2rem
             line-height 3rem
             color #ffffff
+        .money
+          justify-content center
+          h2
+            width: 15rem
+            padding: 1.5rem
+            font-size 1.4rem
+            line-height: 3rem
+            color #ffffff
+            background #F56C6C
+            border-radius 4px
+            i
+              display inline-block
+              width: 3rem
+              height: 3rem
+              margin-right: 0.5rem
+              vertical-align middle
     .btns
       padding 1rem 1rem 0
       // box-shadow 0 -1px 0px #dedede
@@ -423,5 +513,93 @@ export default {
           img
             width 100%
             height 100%
+  .moneyWrap
+    position fixed
+    top 0
+    left 0
+    width 100%
+    height: 100%
+    background rgba(0,0,0,0.6)
+    .moneyBox
+      position absolute
+      display flex
+      flex-direction column
+      overflow hidden
+      top: 0
+      right: 0
+      bottom: 0
+      left: 0
+      margin: auto
+      width: 80%
+      height: 60%
+      background rgb(215,0,15)
+      border-radius 4px
+      .top
+        flex 1
+        display flex
+        flex-direction column
+        padding: 1.5rem
+        background rgb(222,49,33)
+        box-sizing border-box
+        border-bottom-left-radius 20%
+        border-bottom-right-radius 20%
+        box-shadow 0 1px 0px #ff3341
+        i
+          font-size 1.4rem
+          line-height: 2rem
+          color rgb(50,50,50)
+        .head
+          text-align center
+          margin-top: 1rem
+          margin-bottom: 2rem
+          span
+            display inline-block
+            width: 3rem
+            height: 3rem
+            border-radius 4px
+            font-size  1.4rem
+            background rebeccapurple
+            line-height: 3rem
+            color #ffffff
+          h4
+            font-size 1.2rem
+            margin-top: 1rem
+            margin-bottom: 1rem
+            color rgb(244,200,75)
+        p
+          font-size 1.6rem
+          line-height: 3rem
+          color rgb(255,200,0)
+          text-align center
+          flex 1
+      .bottom
+        box-sizing border-box
+        padding: 1.5rem
+        height: 30%
+        display flex
+        text-align center
+        h5
+          flex 1
+          align-self center
+          font-size 1.2rem
+  .boceIn-enter-active
+    animation boceIn 0.5s ease-in
+    @keyframes boceIn
+      0%,20%,40%,60%,80%,100%{-webkit-transition-timing-function:cubic-bezier(0.215,.610,.355,1.000);transition-timing-function:cubic-bezier(0.215,.610,.355,1.000)}
+      0%{opacity:0;-webkit-transform:scale3d(.3,.3,.3);transform:scale3d(.3,.3,.3)}
+      20%{-webkit-transform:scale3d(1.1,1.1,1.1);transform:scale3d(1.1,1.1,1.1)}
+      40%{-webkit-transform:scale3d(.9,.9,.9);transform:scale3d(.9,.9,.9)}
+      60%{opacity:1;-webkit-transform:scale3d(1.03,1.03,1.03);transform:scale3d(1.03,1.03,1.03)}
+      80%{-webkit-transform:scale3d(.97,.97,.97);transform:scale3d(.97,.97,.97)}
+      100%{opacity:1;-webkit-transform:scale3d(1,1,1);transform:scale3d(1,1,1)}
+  .boceIn-leave-active
+    animation boceOut 0.5s ease-in
+    @keyframes boceOut
+      0%
+        opacity 1
+      100%
+        opacity 0
+  .boceIn-enter, .boceIn-leave-to
+    transition all 0.5s
 </style>
 
