@@ -21,14 +21,16 @@ io.sockets.on('connection', (socket) => {
   })
 
   socket.on('addUser', (userName) => {
-    socket.userName = userName
-    appObj.userList.push(userName)
-    appObj.chatHis.push({
-      userName: userName,
-      type: 'newUser'
-    })
-    socket.broadcast.emit('addUserSuccess', appObj)
-    socket.emit('addUserSuccess', appObj)
+    if (appObj.userList.indexOf(userName) < 0) {
+      socket.userName = userName
+      appObj.userList.push(userName)
+      appObj.chatHis.push({
+        userName: userName,
+        type: 'newUser'
+      })
+      socket.broadcast.emit('addUserSuccess', appObj)
+      socket.emit('addUserSuccess', appObj)
+    }
   })
 
   // 用户发送消息
@@ -44,7 +46,7 @@ io.sockets.on('connection', (socket) => {
   })
 
   // 管理者发红包
-  socket.on('sendMoney', ()=> {
+  socket.on('sendMoney', () => {
     appObj.chatHis.push({
       userName: socket.userName,
       type: 'sendMoney'
@@ -53,8 +55,19 @@ io.sockets.on('connection', (socket) => {
     socket.emit('sendMoneySuccess', appObj)
   })
 
+  // 发送图片
+  socket.on('sendImg', (url) => {
+    appObj.chatHis.push({
+      userName: socket.userName,
+      type: 'sendImg',
+      url: url
+    })
+    socket.broadcast.emit('sendImgSuccess', appObj)
+    socket.emit('sendImgSuccess', appObj)
+  })
+
   // 领取红包
-  socket.on('getMoney', (moneyObj)=> {
+  socket.on('getMoney', (moneyObj) => {
     appObj.chatHis.push({
       userName: socket.userName,
       type: 'getMoney',

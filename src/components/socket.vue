@@ -23,16 +23,22 @@
           <i class="onlineIcon"></i>{{ userList ? userList.length : 0 }}人在线
         </h2>
         <ul class="chatCont" ref="chatCont">
-          <li :class="{ 'others': item.type=='sendNewMessage' && item.userName!=userName, 'money': item.type=='sendMoney','myText': item.type=='sendNewMessage' && item.userName==userName, 'system': (item.type=='newUser' || item.type=='deleUser' || item.type=='getMoney') }" v-for="(item, index) in chatHis" :key="index">
-            <div v-if="item.type=='sendNewMessage' && item.userName!=userName">
+          <li :class="{ 'others': (item.type=='sendNewMessage' || item.type=='sendImg') && item.userName!=userName, 'money': item.type=='sendMoney','myText': (item.type=='sendNewMessage' || item.type=='sendImg') && item.userName==userName, 'system': (item.type=='newUser' || item.type=='deleUser' || item.type=='getMoney') }" v-for="(item, index) in chatHis" :key="index">
+            <div v-if="(item.type=='sendNewMessage' || item.type=='sendImg') && item.userName!=userName">
               <span class="head">{{ item.userName.slice(-1) }}</span>
               <div class="text">
-                <p>{{ item.message }}</p>
+                <p v-if="item.type=='sendImg'">
+                  <img @click="lookImgUrl=item.url;showImg=true;" :src="item.url" alt="">
+                </p>
+                <p v-else v-html="filterEmoj(item.message)">{{ filterEmoj(item.message) }}</p>
               </div>
             </div>
-            <div v-if="item.type=='sendNewMessage' && item.userName==userName">
+            <div v-if="(item.type=='sendNewMessage' || item.type=='sendImg') && item.userName==userName">
               <div class="text">
-                <p>{{ item.message }}</p>
+                <p v-if="item.type=='sendImg'">
+                  <img @click="lookImgUrl=item.url;showImg=true;" :src="item.url" alt="">
+                </p>
+                <p v-else v-html="filterEmoj(item.message)">{{ filterEmoj(item.message) }}</p>
               </div>
               <span class="head">{{ item.userName.slice(-1) }}</span>
             </div>
@@ -77,7 +83,7 @@
           <div class="moneyBox">
             <div class="top">
               <h6 class="close">
-                <i @click="showMoney=false">&#10006</i>
+                <i @click="showMoney=false">&#10006;</i>
               </h6>
               <div class="head">
                 <span>{{ userName.slice(-1) }}</span>
@@ -95,7 +101,7 @@
         <div class="faceBox" v-show="showFace">
           <ul>
             <li v-for="index in 68" :key="index">
-              <img :src="faceSrc(index)" alt="face">
+              <img :src="faceSrc(index)" alt="face" @click="chooseFace(index)">
             </li>
             <li></li>
             <li></li>
@@ -104,6 +110,9 @@
           </ul>
         </div>
       </transition>
+      <div @click="showImg=false" class="lookImg" v-show="showImg">
+        <img :src="lookImgUrl" alt="">
+      </div>
     </div>
   </div>
 </template>
@@ -123,6 +132,8 @@ export default {
       sayCont: '',
       showFace: false,
       showMoney: false,
+      showImg: false,
+      lookImgUrl: '',
       moneyObj: {
         money: 0,
         firstGet: true,
@@ -164,6 +175,9 @@ export default {
       this.common(obj)
     },
     sendNewMessageSuccess (obj) {
+      this.common(obj)
+    },
+    sendImgSuccess (obj) {
       this.common(obj)
     },
     sendMoneySuccess (obj) {
@@ -229,6 +243,7 @@ export default {
         this.warning = '名字已存在,换个试试!'
       } else {
         this.$socket.emit('addUser', this.userName.trim())
+        sessionStorage.setItem('__chatRoomUserName__', this.userName.trim())
         this.nameOk = false
         clearInterval(this.time)
       }
@@ -236,25 +251,45 @@ export default {
     // 发送图片
     uploadImg (e) {
       let file = e.target.files[0]
+      let reader = new FileReader()
       let imageType = /image.*/
       if (file.type.match(imageType)) {
-        let reader = new FileReader()
-        reader.onload = () => {
-          let img = new Image()
-          img.src = reader.result
-          let url = reader.result
-          console.log(url)
+        reader.onload = (ev) => {
+          let url = ev.target.result
+          this.$socket.emit('sendImg', url)
         }
+        reader.readAsDataURL(file)
       }
     },
     // 渲染表情图片
     faceSrc (index) {
       let src = require(`../assets/emoji/${index + 1}.gif`)
       return src
+    },
+    filterEmoj (val) {
+      let em = val.replace(/\[emoj:(\d+)\]/g, (item, index) => {
+        let url = require(`../assets/emoji/${index - 0 + 1}.gif`)
+        return `<span style='background: url(${url}) no-repeat;background-size:100%;display: inline-block;width:4rem;height:4rem;'></span>`
+      })
+      return em
+    },
+    // 点击表情
+    chooseFace (index) {
+      this.showFace = false
+      this.sayCont += `[emoj:${index}]`
     }
   },
   mounted () {
     this.time = setInterval(this.randColor, 2000)
+    setTimeout(() => {
+      if (sessionStorage.getItem('__chatRoomUserName__')) {
+        let name = sessionStorage.getItem('__chatRoomUserName__')
+        this.$socket.emit('addUser', name)
+        this.userName = name
+        clearInterval(this.time)
+        this.nameOk = false
+      }
+    }, 500)
   }
 }
 </script>
@@ -414,6 +449,9 @@ export default {
               border-left 1px solid rgba(255, 255, 255, 0.6)
               box-shadow -1px -1px 1px rgba(0, 0, 0, 0.2)
               transform rotateZ(-45deg)
+            img
+              width 10rem
+              max-height 20rem
         .myText
           justify-content flex-end
           p
@@ -429,6 +467,9 @@ export default {
               border-left 1px solid rgba(255, 255, 255, 0.6)
               box-shadow -1px -1px 1px rgba(0, 0, 0, 0.2)
               transform rotateZ(135deg)
+            img
+              width 10rem
+              max-height 20rem
         .system
           justify-content center
           span
@@ -438,18 +479,18 @@ export default {
         .money
           justify-content center
           h2
-            width: 15rem
-            padding: 1.5rem
+            width 15rem
+            padding 1.5rem
             font-size 1.4rem
-            line-height: 3rem
+            line-height 3rem
             color #ffffff
             background #F56C6C
             border-radius 4px
             i
               display inline-block
-              width: 3rem
-              height: 3rem
-              margin-right: 0.5rem
+              width 3rem
+              height 3rem
+              margin-right 0.5rem
               vertical-align middle
     .btns
       padding 1rem 1rem 0
@@ -518,64 +559,64 @@ export default {
     top 0
     left 0
     width 100%
-    height: 100%
-    background rgba(0,0,0,0.6)
+    height 100%
+    background rgba(0, 0, 0, 0.6)
     .moneyBox
       position absolute
       display flex
       flex-direction column
       overflow hidden
-      top: 0
-      right: 0
-      bottom: 0
-      left: 0
-      margin: auto
-      width: 80%
-      height: 60%
-      background rgb(215,0,15)
+      top 0
+      right 0
+      bottom 0
+      left 0
+      margin auto
+      width 80%
+      height 60%
+      background rgb(215, 0, 15)
       border-radius 4px
       .top
         flex 1
         display flex
         flex-direction column
-        padding: 1.5rem
-        background rgb(222,49,33)
+        padding 1.5rem
+        background rgb(222, 49, 33)
         box-sizing border-box
         border-bottom-left-radius 20%
         border-bottom-right-radius 20%
         box-shadow 0 1px 0px #ff3341
         i
           font-size 1.4rem
-          line-height: 2rem
-          color rgb(50,50,50)
+          line-height 2rem
+          color rgb(50, 50, 50)
         .head
           text-align center
-          margin-top: 1rem
-          margin-bottom: 2rem
+          margin-top 1rem
+          margin-bottom 2rem
           span
             display inline-block
-            width: 3rem
-            height: 3rem
+            width 3rem
+            height 3rem
             border-radius 4px
-            font-size  1.4rem
+            font-size 1.4rem
             background rebeccapurple
-            line-height: 3rem
+            line-height 3rem
             color #ffffff
           h4
             font-size 1.2rem
-            margin-top: 1rem
-            margin-bottom: 1rem
-            color rgb(244,200,75)
+            margin-top 1rem
+            margin-bottom 1rem
+            color rgb(244, 200, 75)
         p
           font-size 1.6rem
-          line-height: 3rem
-          color rgb(255,200,0)
+          line-height 3rem
+          color rgb(255, 200, 0)
           text-align center
           flex 1
       .bottom
         box-sizing border-box
-        padding: 1.5rem
-        height: 30%
+        padding 1.5rem
+        height 30%
         display flex
         text-align center
         h5
@@ -585,13 +626,30 @@ export default {
   .boceIn-enter-active
     animation boceIn 0.5s ease-in
     @keyframes boceIn
-      0%,20%,40%,60%,80%,100%{-webkit-transition-timing-function:cubic-bezier(0.215,.610,.355,1.000);transition-timing-function:cubic-bezier(0.215,.610,.355,1.000)}
-      0%{opacity:0;-webkit-transform:scale3d(.3,.3,.3);transform:scale3d(.3,.3,.3)}
-      20%{-webkit-transform:scale3d(1.1,1.1,1.1);transform:scale3d(1.1,1.1,1.1)}
-      40%{-webkit-transform:scale3d(.9,.9,.9);transform:scale3d(.9,.9,.9)}
-      60%{opacity:1;-webkit-transform:scale3d(1.03,1.03,1.03);transform:scale3d(1.03,1.03,1.03)}
-      80%{-webkit-transform:scale3d(.97,.97,.97);transform:scale3d(.97,.97,.97)}
-      100%{opacity:1;-webkit-transform:scale3d(1,1,1);transform:scale3d(1,1,1)}
+      0%, 20%, 40%, 60%, 80%, 100%
+        -webkit-transition-timing-function cubic-bezier(0.215, 0.61, 0.355, 1)
+        transition-timing-function cubic-bezier(0.215, 0.61, 0.355, 1)
+      0%
+        opacity 0
+        -webkit-transform scale3d(0.3, 0.3, 0.3)
+        transform scale3d(0.3, 0.3, 0.3)
+      20%
+        -webkit-transform scale3d(1.1, 1.1, 1.1)
+        transform scale3d(1.1, 1.1, 1.1)
+      40%
+        -webkit-transform scale3d(0.9, 0.9, 0.9)
+        transform scale3d(0.9, 0.9, 0.9)
+      60%
+        opacity 1
+        -webkit-transform scale3d(1.03, 1.03, 1.03)
+        transform scale3d(1.03, 1.03, 1.03)
+      80%
+        -webkit-transform scale3d(0.97, 0.97, 0.97)
+        transform scale3d(0.97, 0.97, 0.97)
+      100%
+        opacity 1
+        -webkit-transform scale3d(1, 1, 1)
+        transform scale3d(1, 1, 1)
   .boceIn-leave-active
     animation boceOut 0.5s ease-in
     @keyframes boceOut
@@ -601,5 +659,19 @@ export default {
         opacity 0
   .boceIn-enter, .boceIn-leave-to
     transition all 0.5s
+  .lookImg
+    position fixed
+    top 0
+    left 0
+    width 100%
+    height 100%
+    background rgba(0, 0, 0, 0.8)
+    overflow auto
+    img
+      position absolute
+      top 0
+      bottom 0
+      margin auto 0
+      width 100%
 </style>
 
