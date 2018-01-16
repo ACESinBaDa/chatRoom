@@ -120,6 +120,8 @@
 <script>
 import Vue from 'vue'
 import VueSocketio from 'vue-socket.io'
+/* global BMap */
+/* eslint no-undef: "error" */
 Vue.use(VueSocketio, 'http://10.0.0.42:8889')
 export default {
   name: 'HelloWorld',
@@ -140,7 +142,8 @@ export default {
         warning: ''
       },
       userList: [],
-      chatHis: []
+      chatHis: [],
+      address: ''
     }
   },
   // computed: {
@@ -277,6 +280,37 @@ export default {
     chooseFace (index) {
       this.showFace = false
       this.sayCont += `[emoj:${index}]`
+    },
+    onSuccess (position) {
+      // let map = new BMap.Map('mapDiv')
+      // map.centerAndZoom(new BMap.Point(position.coords.longitude, position.coords.latitude), 1)
+      let myGeo = new BMap.Geocoder()
+      myGeo.getLocation(new BMap.Point(position.coords.longitude.toFixed(2), position.coords.latitude.toFixed(2)), function (result) {
+        if (result) {
+          // this.address = result.address
+        }
+      })
+    },
+    onError (error) {
+      console.log(error)
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          alert('您拒绝对获取地理位置的请求')
+          break
+        case error.POSITION_UNAVAILABLE:
+          alert('位置信息是不可用的')
+          break
+        case error.TIMEOUT:
+          alert('请求您的地理位置超时')
+          break
+        case error.UNKNOWN_ERROR:
+          alert('未知错误')
+          break
+      }
+    },
+    localMyCity (result) {
+      let city = result.name
+      alert(city)
     }
   },
   mounted () {
@@ -290,6 +324,13 @@ export default {
         this.nameOk = false
       }
     }, 500)
+
+    // 获取地理位置
+    // if (navigator.geolocation) { // 12345611555
+    //   navigator.geolocation.getCurrentPosition(this.onSuccess, this.onError)
+    // } else {
+    //   alert('您的浏览器不支持使用HTML 5来获取地理位置服务')
+    // }
   }
 }
 </script>
