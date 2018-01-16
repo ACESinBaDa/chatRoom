@@ -285,9 +285,11 @@ export default {
       // let map = new BMap.Map('mapDiv')
       // map.centerAndZoom(new BMap.Point(position.coords.longitude, position.coords.latitude), 1)
       let myGeo = new BMap.Geocoder()
-      myGeo.getLocation(new BMap.Point(position.coords.longitude.toFixed(2), position.coords.latitude.toFixed(2)), function (result) {
+      myGeo.getLocation(new BMap.Point(position.coords.longitude.toFixed(2), position.coords.latitude.toFixed(2)), (result) => {
         if (result) {
-          // this.address = result.address
+          // alert(result.address)
+          this.address = result.address
+          // alert(this.address)
         }
       })
     },
