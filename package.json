@@ -74,5 +74,18 @@
     "> 1%",
     "last 2 versions",
     "not ie <= 8"
-  ]
+  ],
+  "main": ".eslintrc.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ACESinBaDa/chatRoom.git"
+  },
+  "keywords": [
+    "websocket"
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ACESinBaDa/chatRoom/issues"
+  },
+  "homepage": "https://github.com/ACESinBaDa/chatRoom#readme"
 }
