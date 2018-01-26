@@ -9,7 +9,7 @@ let appObj = {
 
 app.use('/', express.static(__dirname + './dist'))
 
-server.listen(9999)
+server.listen(process.env.PORT || 8889)
 
 io.sockets.on('connection', (socket) => {
   // 链接成功
