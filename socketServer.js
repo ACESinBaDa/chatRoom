@@ -8,12 +8,12 @@ let appObj = {
   chatHis: []
 }
 
-app.use(history({
-  index: './index.html'
-}))
-app.use(express.static('./dist'))
+// app.use(history({
+//   index: './index.html'
+// }))
+// app.use(express.static('./dist'))
 
-server.listen(process.env.PORT || 8889)
+server.listen(8889)
 
 io.sockets.on('connection', (socket) => {
   // 链接成功
