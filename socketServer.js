@@ -13,12 +13,19 @@ let appObj = {
 // }))
 // app.use(express.static('./dist'))
 
-server.listen(8888)
-app.use(express.static('./dist'))
+server.listen(8889)
 app.use(history({
-  index: './dist/index.html'
+  index: './index.html'
 }))
-
+app.use(express.static('./dist'))
+let port = 8888
+module.exports = app.listen(port, function(err) {
+  if (err) {
+    console.log(err)
+    return
+  }
+  console.log('Listening at http://localhost:' + port + '\n')
+})
 
 io.sockets.on('connection', (socket) => {
   // 链接成功
