@@ -122,7 +122,7 @@ import Vue from 'vue'
 import VueSocketio from 'vue-socket.io'
 /* global BMap */
 /* eslint no-undef: "error" */
-Vue.use(VueSocketio, 'http://101.132.69.201:8889')
+Vue.use(VueSocketio, 'http://127.0.0.1:8889')
 export default {
   name: 'HelloWorld',
   data () {
