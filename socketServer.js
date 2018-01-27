@@ -1,13 +1,17 @@
 let express = require('express')
 let app = express()
 let server = require('http').createServer(app)
+let history = require('connect-history-api-fallback')
 let io = require('socket.io').listen(server)
 let appObj = {
   userList: [],
   chatHis: []
 }
 
-app.use('/', express.static('./dist'))
+app.use(history({
+  index: './index.html'
+}))
+app.use(express.static('./dist'))
 
 server.listen(process.env.PORT || 8889)
 
