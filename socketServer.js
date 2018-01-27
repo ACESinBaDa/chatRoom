@@ -1,8 +1,8 @@
 let express = require('express')
 let app = express()
-let server = require('http').createServer(app)
+let server = require('http').Server(app)
 let history = require('connect-history-api-fallback')
-let io = require('socket.io').listen(server)
+let io = require('socket.io')(server)
 let appObj = {
   userList: [],
   chatHis: []
@@ -13,7 +13,12 @@ let appObj = {
 // }))
 // app.use(express.static('./dist'))
 
-server.listen(8889)
+server.listen(8888)
+app.use(history({
+  index: './index.html'
+}))
+app.use(express.static('./dist'))
+
 
 io.sockets.on('connection', (socket) => {
   // 链接成功
