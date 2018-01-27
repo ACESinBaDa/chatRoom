@@ -7,7 +7,7 @@ let appObj = {
   chatHis: []
 }
 
-app.use('/', express.static(__dirname + './dist'))
+app.use('/', express.static('./dist'))
 
 server.listen(process.env.PORT || 8889)
 
