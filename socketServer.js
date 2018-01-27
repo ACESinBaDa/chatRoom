@@ -1,31 +1,15 @@
 let express = require('express')
 let app = express()
-let server = require('http').Server(app)
-let history = require('connect-history-api-fallback')
-let io = require('socket.io')(server)
+let server = require('http').createServer(app)
+let io = require('socket.io').listen(server)
 let appObj = {
   userList: [],
   chatHis: []
 }
 
-// app.use(history({
-//   index: './index.html'
-// }))
-// app.use(express.static('./dist'))
+app.use('/', express.static(__dirname + './dist'))
 
-server.listen(8889)
-app.use(history({
-  index: './index.html'
-}))
-app.use(express.static('./dist'))
-let port = 8888
-module.exports = app.listen(port, function(err) {
-  if (err) {
-    console.log(err)
-    return
-  }
-  console.log('Listening at http://localhost:' + port + '\n')
-})
+server.listen(process.env.PORT || 8889)
 
 io.sockets.on('connection', (socket) => {
   // 链接成功
