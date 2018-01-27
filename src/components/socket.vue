@@ -69,7 +69,7 @@
         </div>
         <div class="other">
           <b class="colorIcon"></b>
-          <b class="imgIcon imgButton">
+          <b v-if="0" class="imgIcon imgButton">
             <label for="img">
               <input @change="uploadImg" type="file" id="img" name="img" v-show="0">
             </label>
