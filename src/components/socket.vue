@@ -64,7 +64,7 @@
       </div>
       <div class="btns">
         <div class="inp">
-          <input type="text" placeholder="说点什么" @focus="showFace=false" v-model="sayCont">
+          <input type="text" placeholder="说点什么" @focus="showFace=false" @keyup.13="sendMessage" v-model="sayCont">
           <span class="disable" @click="sendMessage">发送</span>
         </div>
         <div class="other">
