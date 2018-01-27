@@ -14,10 +14,10 @@ let appObj = {
 // app.use(express.static('./dist'))
 
 server.listen(8888)
-app.use(history({
-  index: './index.html'
-}))
 app.use(express.static('./dist'))
+app.use(history({
+  index: './dist/index.html'
+}))
 
 
 io.sockets.on('connection', (socket) => {
