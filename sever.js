@@ -5,11 +5,11 @@ var history = require('connect-history-api-fallback')
 var compression = require('compression')
 var app = express()
 app.use(compression())
-app.use('chatRoom.sinbada.top', proxy({
+app.use('chat.sinbada.top', proxy({
   target: 'http://101.132.69.201:8888',
   changeOrigin: true,
   pathRewrite: {
-    'chatRoom.sinbada.top': 'http://101.132.69.201:8888'
+    'chat.sinbada.top': 'http://101.132.69.201:8888'
   }
 }))
 app.use(history({
