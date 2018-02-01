@@ -3,15 +3,27 @@ var proxy = require('http-proxy-middleware')
 var history = require('connect-history-api-fallback')
   // var config = require('./config/index')
 var compression = require('compression')
+var connect = require('connect')
+var http = require('http')
+
 var app = express()
+
+var chatHost = connect.vhost(
+  'chatRoom.sinbada.top',
+  http.createServer(app)
+)
+connect.createServer(
+  connect.logger(), chatHost
+).listen(8888)
+
 app.use(compression())
-app.use('chatRoom.sinbada.top', proxy({
-  target: 'http://101.132.69.201:8888',
-  changeOrigin: true,
-  pathRewrite: {
-    '^chatRoom.sinbada.top': ''
-  }
-}))
+  // app.use('chatRoom.sinbada.top', proxy({
+  //   target: 'http://101.132.69.201:8888',
+  //   changeOrigin: true,
+  //   pathRewrite: {
+  //     '^chatRoom.sinbada.top': ''
+  //   }
+  // }))
 app.use(history({
   index: './index.html'
 }))
