@@ -5,11 +5,11 @@ var history = require('connect-history-api-fallback')
 var compression = require('compression')
 var app = express()
 app.use(compression())
-app.use('/socket', proxy({
+app.use('/mySocket', proxy({
   target: 'http://101.132.69.201:8889',
   changeOrigin: true,
   pathRewrite: {
-    '^/socket': ''
+    '^/mySocket': ''
   }
 }))
 app.use(history({
