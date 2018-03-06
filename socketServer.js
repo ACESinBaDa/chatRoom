@@ -1,6 +1,6 @@
 let express = require('express')
 let app = express()
-
+let path = require('path')
 let fs = require('fs')
 
 let privateKey = fs.readFileSync(path.join(__dirname, './other/214517163550706.key'), 'utf8')
