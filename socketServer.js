@@ -6,10 +6,11 @@ let fs = require('fs')
 let privateKey = fs.readFileSync(path.join(__dirname, './other/214517163550706.key'), 'utf8')
 let certificate = fs.readFileSync(path.join(__dirname, './other/214517163550706.pem'), 'utf8')
 let credentials = { key: privateKey, cert: certificate }
+
 let server = require('http').createServer(app)
 let httpsServer = require('https').createServer(credentials, app)
 
-let io = require('socket.io').listen(httpsServer)
+let io = require('socket.io').listen(server)
 let appObj = {
   userList: [],
   chatHis: []
@@ -17,7 +18,7 @@ let appObj = {
 
 app.use('/', express.static(__dirname + './dist'))
 
-httpsServer.listen(process.env.PORT || 8889)
+server.listen(process.env.PORT || 8889)
 // httpsServer.listen(443, (err)=>{
 //   if(err) {
 //     console.log(err)
