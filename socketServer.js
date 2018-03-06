@@ -9,7 +9,7 @@ let credentials = { key: privateKey, cert: certificate }
 let server = require('http').createServer(app)
 let httpsServer = require('https').createServer(credentials, app)
 
-let io = require('socket.io').listen(server)
+let io = require('socket.io').listen(httpsServer)
 let appObj = {
   userList: [],
   chatHis: []
