@@ -9,7 +9,7 @@ let credentials = { key: privateKey, cert: certificate }
 let server = require('http').createServer(app)
 let httpsServer = require('https').createServer(credentials, app)
 
-let io = require('socket.io').listen(server)
+let io = require('socket.io').listen(httpsServer)
 let appObj = {
   userList: [],
   chatHis: []
@@ -17,7 +17,7 @@ let appObj = {
 
 app.use('/', express.static(__dirname + './dist'))
 
-server.listen(process.env.PORT || 8889)
+httpsServer.listen(process.env.PORT || 8889)
 // httpsServer.listen(443, (err)=>{
 //   if(err) {
 //     console.log(err)
