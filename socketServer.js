@@ -4,7 +4,7 @@ let path = require('path')
 let fs = require('fs')
 
 let privateKey = fs.readFileSync(path.join(__dirname, './other/214517163550706.key'), 'utf8')
-let certificate = fs.readdirSync(path.join(__dirname, './other/214517163550706.pem'), 'utf8')
+let certificate = fs.readFileSync(path.join(__dirname, './other/214517163550706.pem'), 'utf8')
 let credentials = { key: privateKey, cert: certificate }
 let server = require('http').createServer(app)
 let httpsServer = require('https').createServer(credentials, app)
