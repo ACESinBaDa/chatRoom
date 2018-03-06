@@ -18,7 +18,7 @@ let appObj = {
 app.use('/', express.static(__dirname + './dist'))
 
 server.listen(process.env.PORT || 8889)
-httpsServer.listen(442, (err)=>{
+httpsServer.listen(443, (err)=>{
   if(err) {
     console.log(err)
     return 
