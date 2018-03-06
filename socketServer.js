@@ -1,6 +1,14 @@
 let express = require('express')
 let app = express()
+
+let fs = require('fs')
+
+let privateKey = fs.readFileSync(path.join(__dirname, './other/214517163550706.key'), 'utf8')
+let certificate = fs.readdirSync(path.join(__dirname, './other/214517163550706.pem'), 'utf8')
+let credentials = { key: privateKey, cert: certificate }
 let server = require('http').createServer(app)
+let httpsServer = require('https').createServer(credentials, app)
+
 let io = require('socket.io').listen(server)
 let appObj = {
   userList: [],
@@ -10,6 +18,13 @@ let appObj = {
 app.use('/', express.static(__dirname + './dist'))
 
 server.listen(process.env.PORT || 8889)
+httpsServer.listen(443, (err)=>{
+  if(err) {
+    console.log(err)
+    return 
+  }
+  console.log('HTTPS at http://localhost:443')
+})
 
 io.sockets.on('connection', (socket) => {
   // 链接成功
