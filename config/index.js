@@ -10,7 +10,15 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {},
+    proxyTable: {
+      '/mySocket': {
+        target: 'http://101.132.69.201:8889',
+        changeOrigin: true,
+        pathRewrite: {
+          "^/mySocket": ""
+        }
+      }
+    },
 
     // Various Dev Server settings
     host: 'localhost',
